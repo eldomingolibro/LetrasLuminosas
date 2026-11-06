@@ -1,0 +1,10 @@
+flask
+gunicorn
+numpy
+scipy
+trimesh
+manifold3d
+shapely
+matplotlib
+mapbox-earcut
+lxml

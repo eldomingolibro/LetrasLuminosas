@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Letrero luminoso · Generador</title>
+<style>
+  :root{ --bg:#0f1420; --panel:#171e2e; --panel2:#1e2740; --line:#2a3350;
+         --txt:#e8ecf5; --mut:#8b96b4; --acc:#ffd24a; --acc2:#3ddc84; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       background:var(--bg);color:var(--txt);height:100vh;overflow:hidden}
+  .app{display:grid;grid-template-columns:330px 1fr;height:100vh}
+  aside{background:var(--panel);border-right:1px solid var(--line);padding:16px;overflow-y:auto}
+  h1{font-size:17px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+  h1 .em{font-size:22px}
+  .sub{color:var(--mut);font-size:12px;margin:0 0 16px}
+  .grp{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+  .grp h2{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin:0 0 10px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+  .row:last-child{margin-bottom:0}
+  label{font-size:13px;color:var(--txt);flex:1}
+  label small{display:block;color:var(--mut);font-size:11px}
+  input[type=text],select{width:150px;background:#0c1322;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 8px;font-size:14px}
+  input[type=number]{width:82px;background:#0c1322;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 8px;font-size:14px;text-align:right}
+  input:focus,select:focus{outline:none;border-color:var(--acc)}
+  input[type=color]{width:40px;height:28px;border:1px solid var(--line);border-radius:7px;background:#0c1322;padding:2px;cursor:pointer}
+  input[type=checkbox]{width:18px;height:18px;accent-color:var(--acc)}
+  button{width:100%;border:0;border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer}
+  .dl{background:transparent;border:1px solid var(--acc2);color:var(--acc2);margin-top:8px}
+  .dl2{background:transparent;border:1px solid #6aa0ff;color:#9cc0ff;margin-top:8px}
+  .coffee{display:block;text-align:center;text-decoration:none;margin-top:16px;background:#ffdd00;
+    color:#3a2c00;border-radius:10px;padding:12px;font-size:14px;font-weight:700;border:1px solid #e6c700}
+  .coffee:hover{filter:brightness(1.06)}
+  .coffee-sub{color:var(--mut);font-size:11px;text-align:center;margin:6px 0 2px;line-height:1.4}
+  main{position:relative;background:radial-gradient(circle at 50% 40%,#10131c,#07090f)}
+  #c{width:100%;height:100%;display:block}
+  .stats{position:absolute;left:14px;bottom:14px;background:rgba(10,15,26,.82);border:1px solid var(--line);
+       border-radius:10px;padding:10px 13px;font-size:12px;color:var(--mut);line-height:1.7}
+  .stats b{color:var(--txt)} .ok{color:var(--acc2)} .bad{color:#ff6b6b}
+  .hint{position:absolute;right:14px;top:14px;color:var(--mut);font-size:11px;background:rgba(10,15,26,.7);padding:5px 9px;border-radius:7px;max-width:220px;line-height:1.5}
+  .lamp{position:absolute;right:14px;bottom:14px;display:flex;align-items:center;gap:7px;background:rgba(10,15,26,.82);border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:12px}
+  .load{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(8,11,20,.45);color:var(--acc)}
+  .load.on{display:flex}
+  .viewbar{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;gap:4px;
+    background:rgba(12,17,26,.9);border:1px solid var(--line);border-radius:10px;padding:4px;z-index:3}
+  .viewbar button{width:auto;padding:5px 11px;font-size:12px;border-radius:7px;background:transparent;color:var(--mut);border:0;cursor:pointer}
+  .viewbar button.on{background:var(--acc);color:#1a1000}
+  .perfil{position:absolute;left:14px;top:14px;width:270px;max-width:40vw;max-height:calc(100vh - 28px);
+    overflow-y:auto;background:rgba(12,17,26,.93);
+    border:1px solid var(--line);border-radius:12px;padding:10px 10px 6px;backdrop-filter:blur(4px)}
+  .perfil .plabel{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--acc);
+    margin:2px 0 2px;padding-top:6px;border-top:1px solid var(--line)}
+  .perfil .plabel:first-child{border-top:0;padding-top:0}
+  .perfil svg{width:100%;height:auto;display:block}
+  .perfil .cap{font-size:10.5px;color:var(--mut);text-align:center;margin:6px 0 2px}
+  .pz{fill:#6f7891;stroke:#0c1018;stroke-width:.6}
+  .pz.tapa{fill:#ffe08a;opacity:.85}
+  .pz.hl{fill:var(--acc)}
+  .dl{stroke:#9aa6c2;stroke-width:.7;fill:none}
+  .dt{fill:#cdd6ea;font:9.5px system-ui;text-anchor:middle}
+  g.hl .dl{stroke:var(--acc);stroke-width:1.4}
+  g.hl .dt{fill:var(--acc);font-weight:700}
+  @media(max-width:720px){.app{grid-template-columns:1fr;grid-template-rows:1fr 46vh}aside{order:2;border-right:0;border-top:1px solid var(--line)}main{order:1}
+    .perfil{position:static;width:auto;max-width:none;margin:8px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1><span class="em">🔆</span> Letrero luminoso</h1>
+    <p class="sub">Letras caja con hueco para LED</p>
+
+    <div class="grp">
+      <h2>Texto</h2>
+      <div class="row" title="Palabra de la línea de arriba"><label>Línea 1</label><input type="text" id="linea1" value="BAR"></div>
+      <div class="row" title="Segunda línea (debajo). Vacía = una sola línea"><label>Línea 2 <small>opcional</small></label><input type="text" id="linea2" value=""></div>
+      <div class="row" title="Estilo de letra (incluye manuscritas/caligráficas)"><label>Tipografía</label>
+        <select id="fuente">
+          <optgroup label="Sans"><option>Arial</option><option>Arial Black</option><option>Helvetica</option><option>Verdana</option><option>Impact</option><option>DejaVu Sans</option></optgroup>
+          <optgroup label="Serif"><option>Georgia</option><option>Times New Roman</option><option>Baskerville</option><option>DejaVu Serif</option></optgroup>
+          <optgroup label="Manuscrita"><option>Chalkduster</option><option>Bradley Hand</option><option>Marker Felt</option><option>Snell Roundhand</option><option>Noteworthy</option><option>Comic Sans MS</option></optgroup>
+        </select></div>
+      <div class="row" title="Alto de las letras. Agranda TODO el letrero"><label>Altura letra <small>mm · ↑ más grande</small></label><input type="number" id="altura_texto" value="50" step="2"></div>
+      <div class="row" title="Engorda (+) o adelgaza (−) el trazo. Útil si la pared no cabe en letras finas"><label>Grosor letra <small>+ engorda / − adelgaza</small></label><input type="number" id="grosor_letra" value="0" step="0.3"></div>
+      <div class="row" title="Separación horizontal entre letras"><label>Espaciado <small>entre letras mm</small></label><input type="number" id="espaciado" value="0" step="0.5"></div>
+      <div class="row" title="Separación vertical entre las dos líneas"><label>Interlínea <small>2 líneas · mm</small></label><input type="number" id="interlinea" value="14" step="1"></div>
+      <div class="row" title="Refleja el texto (para contraluz o imprimir la cara contra la base)"><label>Espejo <small>texto reflejado</small></label><input type="checkbox" id="espejo"></div>
+    </div>
+
+    <div class="grp">
+      <h2>Caja / LED</h2>
+      <div class="row" title="Alto total de la caja = cuánto sobresale el letrero. ↑ = más fondo para el LED"><label>Profundidad <small>alto caja · ↑ más fondo</small></label><input type="number" id="profundidad" value="16" step="1"></div>
+      <div class="row" title="Grosor de las paredes de la letra. ↑ = pared más fuerte pero hueco interior más pequeño"><label>Grosor pared <small>↑ más fuerte · menos hueco</small></label><input type="number" id="grosor_pared" value="2.5" step="0.5"></div>
+      <div class="row" title="Grosor del fondo cerrado (trasera). Donde apoya el LED"><label>Fondo cerrado <small>trasera mm</small></label><input type="number" id="grosor_trasera" value="1.6" step="0.2"></div>
+      <div class="row" title="Ancho que quieres para el canal del LED. La letra se engorda sola hasta conseguirlo. 0 = manual (usas Grosor letra)"><label>Ancho LED <small>objetivo mm · 0 = manual</small></label><input type="number" id="ancho_hueco_obj" value="0" step="0.5"></div>
+      <div class="row" title="Une todas las letras en una placa única por detrás (más rígido, más material)"><label>Placa trasera <small>une las letras</small></label><input type="checkbox" id="placa_trasera"></div>
+      <div class="row" title="Grosor de esa placa trasera (solo si está activada)"><label>Grosor placa <small>mm</small></label><input type="number" id="grosor_placa" value="2" step="0.5"></div>
+    </div>
+
+    <div class="grp">
+      <h2>Tapa / encastre</h2>
+      <div class="row" title="Genera la tapa translúcida que encaja en la boca. Desactiva para solo la caja"><label>Incluir tapa <small>encastrada (translúcida)</small></label><input type="checkbox" id="incluir_tapa" checked></div>
+      <div class="row" title="Grosor de la tapa = profundidad del rebaje donde encaja. ↑ = tapa más gruesa y rebaje más hondo"><label>Grosor tapa <small>↑ tapa y rebaje más hondos</small></label><input type="number" id="grosor_tapa" value="2" step="0.2"></div>
+      <div class="row" title="Ancho del escalón donde apoya la tapa. ↑ = más apoyo (y tapa más pequeña)"><label>Reborde encastre <small>↑ más apoyo</small></label><input type="number" id="labio" value="1.3" step="0.1"></div>
+      <div class="row" title="Juego de encaje. ↑ = la tapa entra más suelta; ↓ = más apretada"><label>Holgura tapa <small>↑ más suelta · ↓ apretada</small></label><input type="number" id="holgura" value="0.25" step="0.05"></div>
+      <div class="row" title="La letra/tapa apoya en un escalón a media altura y deja un hueco para el LED por debajo (hueco sobre hueco)"><label>Tope (inserto) <small>hueco LED bajo la letra</small></label><input type="checkbox" id="tope"></div>
+      <div class="row" title="Profundidad del hueco del LED por debajo de la letra (solo con Tope). ↑ = más hueco para el LED"><label>Hueco LED <small>fondo bajo la letra mm</small></label><input type="number" id="hueco_led" value="8" step="1"></div>
+    </div>
+
+    <div class="grp">
+      <h2>Colores</h2>
+      <div class="row"><label>Tapa / frente (translúcido)</label><input type="color" id="color_frente" value="#FFFFFF"></div>
+      <div class="row"><label>Caja (opaco)</label><input type="color" id="color_caja" value="#000000"></div>
+    </div>
+
+    <button class="dl" id="dl_stl">⬇️ Descargar .STL</button>
+    <button class="dl2" id="dl_3mf">🎨 Descargar .3MF (2 materiales)</button>
+
+    <a class="coffee" href="https://paypal.me/eldomingolibro" target="_blank" rel="noopener">☕ Invítame a un café</a>
+    <p class="coffee-sub">¿Te sirve esta herramienta?<br>Invítame a un café 💛</p>
+  </aside>
+
+  <main>
+    <canvas id="c"></canvas>
+    <div class="viewbar">
+      <button data-vm="solid">Sólido</button>
+      <button data-vm="edges" class="on">Aristas</button>
+      <button data-vm="wire">Malla</button>
+    </div>
+    <div class="hint">Arrastra para girar · rueda = zoom · pulsa 💡 para encender/apagar</div>
+    <div class="perfil" id="perfil">
+      <div class="plabel">✂️ Perfil de la caja</div>
+      <svg id="svgcaja" viewBox="0 0 300 210" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="plabel">✂️ Perfil de la tapa</div>
+      <svg id="svgtapa" viewBox="0 35 300 155" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="cap">Pasa el ratón por un campo del menú para resaltar su cota</div>
+    </div>
+    <div class="stats" id="stats">—</div>
+    <div class="lamp"><span id="luz">💡 Luz: ON</span></div>
+    <div class="load" id="load">Generando…</div>
+  </main>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const NUM = ["altura_texto","grosor_letra","espaciado","interlinea","profundidad","grosor_pared","grosor_trasera","grosor_tapa","labio","holgura","grosor_placa","hueco_led","ancho_hueco_obj"];
+const TXT = ["linea1","linea2","fuente","color_frente","color_caja"];
+
+const canvas=$("c");
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputEncoding=THREE.sRGBEncoding;
+// SIN sombras, SIN reflejos de entorno, SIN tono -> render nítido tipo CAD/editor
+
+function gradTex(c0,c1){ const cv=document.createElement('canvas'); cv.width=8; cv.height=256;
+  const g=cv.getContext('2d'); const gr=g.createLinearGradient(0,0,0,256); gr.addColorStop(0,c0); gr.addColorStop(1,c1);
+  g.fillStyle=gr; g.fillRect(0,0,8,256); return new THREE.CanvasTexture(cv); }
+
+// matcap tipo "solid" de Blender: esfera de barro iluminada arriba-izquierda,
+// sin sombras ni reflejos -> lee bien la forma y es nítido
+function makeMatcap(){ const c=document.createElement('canvas'); c.width=c.height=256; const g=c.getContext('2d');
+  g.fillStyle='#2e3340'; g.fillRect(0,0,256,256);
+  const grd=g.createRadialGradient(96,84,10, 128,128,150);
+  grd.addColorStop(0,'#ffffff'); grd.addColorStop(.35,'#dfe3ea'); grd.addColorStop(.72,'#9aa2b2'); grd.addColorStop(1,'#565d6c');
+  g.beginPath(); g.arc(128,128,127,0,7); g.closePath(); g.fillStyle=grd; g.fill();
+  const h=g.createRadialGradient(94,80,1, 94,80,52); h.addColorStop(0,'rgba(255,255,255,.85)'); h.addColorStop(1,'rgba(255,255,255,0)');
+  g.save(); g.beginPath(); g.arc(128,128,127,0,7); g.clip(); g.fillStyle=h; g.fillRect(0,0,256,256); g.restore();
+  const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; return t; }
+const MATCAP=makeMatcap();
+function tinte(hex,amt){ return new THREE.Color(hex).lerp(new THREE.Color(0xffffff),amt); }
+
+const scene=new THREE.Scene();
+scene.background=gradTex('#273046','#0d121c');
+const camera=new THREE.PerspectiveCamera(42,1,0.1,6000);
+camera.position.set(0,-230,150); camera.up.set(0,0,1);
+const controls=new THREE.OrbitControls(camera,canvas); controls.enableDamping=true; controls.target.set(0,0,10);
+
+// luz plana y uniforme (sin sombras ni reflejos -> nada "difuminado")
+scene.add(new THREE.HemisphereLight(0xeef2ff,0x383e52,0.95));
+const key=new THREE.DirectionalLight(0xffffff,0.7); key.position.set(60,-90,150); scene.add(key);
+const fill=new THREE.DirectionalLight(0xffffff,0.45); fill.position.set(-70,-20,70); scene.add(fill);
+const back=new THREE.DirectionalLight(0xc8d6ff,0.3); back.position.set(0,130,50); scene.add(back);
+
+const root=new THREE.Group(); scene.add(root);
+let meshes=[]; let luzOn=true; let _fitted=false;
+
+function resize(){const w=canvas.clientWidth,h=canvas.clientHeight; if(canvas.width!==w||canvas.height!==h){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}}
+function loop(){resize();controls.update();renderer.render(scene,camera);requestAnimationFrame(loop);} loop();
+
+let viewMode="edges";   // solid | edges | wire
+function clearScene(){ meshes.forEach(o=>{ root.remove(o.solid); root.remove(o.wire);
+  o.solid.geometry.dispose(); o.solid.material.dispose(); o.wire.geometry.dispose(); o.wire.material.dispose(); }); meshes=[]; }
+function mkPart(part){
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(part.v,3));
+  g.setIndex(part.f); g.computeVertexNormals(); g.computeBoundingBox();
+  let mat;
+  if(part.glow && luzOn){   // tapa encendida -> plana y brillante
+    mat=new THREE.MeshBasicMaterial({color:tinte(part.color,0.35), side:THREE.DoubleSide});
+  } else {                  // matcap tipo Blender-solid (nítido, sin sombras)
+    mat=new THREE.MeshMatcapMaterial({matcap:MATCAP, color:tinte(part.color, part.glow?0.45:0.22),
+      side: part.glow?THREE.DoubleSide:THREE.FrontSide});
+  }
+  const solid=new THREE.Mesh(g,mat);
+  // aristas de la malla (todas las caras) -> look de editor
+  const wire=new THREE.LineSegments(new THREE.WireframeGeometry(g),
+    new THREE.LineBasicMaterial({color:0x9fb2d6, transparent:true, opacity:.45}));
+  return {solid, wire, g};
+}
+function applyView(){ meshes.forEach(o=>{ o.solid.visible=(viewMode!=="wire"); o.wire.visible=(viewMode!=="solid"); }); }
+function showParts(parts){
+  clearScene();
+  const box=new THREE.Box3();
+  parts.forEach(p=>{ const o=mkPart(p); root.add(o.solid); root.add(o.wire); meshes.push(o); box.union(o.g.boundingBox); });
+  const c=box.getCenter(new THREE.Vector3()), sz=box.getSize(new THREE.Vector3());
+  root.position.set(-c.x,-c.y,-box.min.z);       // apoyar en el suelo (z=0)
+  controls.target.set(0,0,sz.z*0.45);
+  if(!_fitted){ const d=Math.max(sz.x,sz.y,sz.z)*1.6+60; camera.position.set(0,-d,d*0.62); _fitted=true; }
+  applyView();
+}
+document.querySelectorAll(".viewbar button").forEach(b=>b.onclick=()=>{
+  viewMode=b.dataset.vm;
+  document.querySelectorAll(".viewbar button").forEach(x=>x.classList.toggle("on",x===b));
+  applyView();
+});
+
+function params(){ const p={}; NUM.forEach(f=>p[f]=parseFloat($(f).value)||0); TXT.forEach(f=>p[f]=$(f).value);
+  p.placa_trasera=$("placa_trasera").checked; p.incluir_tapa=$("incluir_tapa").checked;
+  p.espejo=$("espejo").checked; p.tope=$("tope").checked; return p; }
+
+let _busy=false,_again=false;
+async function preview(){
+  if(_busy){_again=true;return;} _busy=true; $("load").classList.add("on");
+  try{
+    const res=await fetch("preview",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(params())});
+    const j=await res.json(); if(!res.ok) throw new Error(j.error||res.status);
+    showParts(j.parts);
+    lastAncho = j.ancho_hueco||0;
+    const n=j.parts.reduce((a,p)=>a+p.f.length/3,0);
+    $("stats").innerHTML=`Hueco LED: <b style="color:var(--acc)">${lastAncho} mm</b> de ancho<br>${n.toLocaleString()} caras · <span class="ok">listo</span>`;
+  }catch(e){ $("stats").innerHTML=`<span class="bad">Error: ${e.message}</span>`; }
+  finally{ $("load").classList.remove("on"); _busy=false; if(_again){_again=false;preview();} }
+}
+let _t=null; function live(){ clearTimeout(_t); _t=setTimeout(preview,300); }
+
+async function descargar(formato,ext){
+  $("load").classList.add("on");
+  try{
+    const p=params(); p.formato=formato;
+    const res=await fetch("generar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(p)});
+    if(!res.ok){const j=await res.json();throw new Error(j.error||res.status);}
+    const buf=await res.blob(); const nom=($("linea1").value||"letrero").replace(/\s+/g,"_");
+    const a=document.createElement("a"); a.href=URL.createObjectURL(buf); a.download=`letrero_${nom}.${ext}`; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  }catch(e){ $("stats").innerHTML=`<span class="bad">Error: ${e.message}</span>`; }
+  finally{ $("load").classList.remove("on"); }
+}
+$("dl_stl").onclick=()=>descargar("stl","stl");
+$("dl_3mf").onclick=()=>descargar("3mf","3mf");
+
+// encender / apagar la "luz" (al encender, oscurece el fondo para que brille)
+$("luz").parentElement.onclick=()=>{ luzOn=!luzOn; $("luz").textContent="💡 Luz: "+(luzOn?"ON":"OFF");
+  scene.background=luzOn?gradTex('#0a0d14','#05070b'):gradTex('#2a3450','#0b0f17'); preview(); };
+
+[...NUM,...TXT].forEach(id=>{ $(id).addEventListener("input",live); $(id).addEventListener("change",live); });
+$("placa_trasera").addEventListener("change",live);
+$("incluir_tapa").addEventListener("change",live);
+$("espejo").addEventListener("change",live);
+$("tope").addEventListener("change",live);
+// al tocar el grosor de la placa, auto-marcar "Placa trasera"
+$("grosor_placa").addEventListener("input",()=>{ if(!$("placa_trasera").checked){ $("placa_trasera").checked=true; } });
+
+// ---------- perfil acotado (SVG) con resaltado ----------
+let lastAncho=0;
+const fmt=v=>(Math.round(v*10)/10)+"";
+function vdim(x,y1,y2,val,ctrl){ const ym=(y1+y2)/2; return `<g data-ctrl="${ctrl}">`+
+  `<line class="dl" x1="${x}" y1="${y1}" x2="${x}" y2="${y2}"/>`+
+  `<line class="dl" x1="${x-3}" y1="${y1}" x2="${x+3}" y2="${y1}"/>`+
+  `<line class="dl" x1="${x-3}" y1="${y2}" x2="${x+3}" y2="${y2}"/>`+
+  `<text class="dt" x="${x-4}" y="${ym+3}" transform="rotate(-90 ${x-4} ${ym})">${fmt(val)}</text></g>`; }
+function hdim(y,x1,x2,val,ctrl){ const xm=(x1+x2)/2; return `<g data-ctrl="${ctrl}">`+
+  `<line class="dl" x1="${x1}" y1="${y}" x2="${x2}" y2="${y}"/>`+
+  `<line class="dl" x1="${x1}" y1="${y-3}" x2="${x1}" y2="${y+3}"/>`+
+  `<line class="dl" x1="${x2}" y1="${y-3}" x2="${x2}" y2="${y+3}"/>`+
+  `<text class="dt" x="${xm}" y="${y-3}">${fmt(val)}</text></g>`; }
+function geom(){ const P=params();
+  const prof=Math.max(P.profundidad,1), gp=Math.max(P.grosor_pared,.5), eb=Math.max(P.grosor_trasera,.1);
+  let gt=Math.max(Math.min(P.grosor_tapa, prof-eb-0.6),0.3), labio=Math.min(P.labio, gp*0.7);
+  const tope=$("tope").checked, tapaOn=$("incluir_tapa").checked, hol=P.holgura, hled=P.hueco_led;
+  const zled = tope ? Math.max(eb+1, Math.min(eb+hled, prof-gt-0.4)) : prof-gt;
+  return {prof,gp,eb,gt,labio,tope,tapaOn,hol,hled,zled}; }
+function svgCaja(){ const g=geom(); const cav=Math.max(lastAncho||14,4), Wsec=cav+2*g.gp;
+  const s=Math.min(118/g.prof, 150/Wsec), OX=96, OY=168, X=mm=>OX+mm*s, Y=z=>OY-z*s;
+  let el="";
+  el+=`<rect class="pz" data-ctrl="grosor_trasera" x="${X(0)}" y="${Y(g.eb)}" width="${Wsec*s}" height="${g.eb*s}"/>`;
+  el+=`<polygon class="pz" data-ctrl="grosor_pared" points="${X(0)},${Y(g.eb)} ${X(0)},${Y(g.prof)} ${X(g.labio)},${Y(g.prof)} ${X(g.labio)},${Y(g.zled)} ${X(g.gp)},${Y(g.zled)} ${X(g.gp)},${Y(g.eb)}"/>`;
+  el+=`<polygon class="pz" data-ctrl="grosor_pared" points="${X(Wsec)},${Y(g.eb)} ${X(Wsec)},${Y(g.prof)} ${X(Wsec-g.labio)},${Y(g.prof)} ${X(Wsec-g.labio)},${Y(g.zled)} ${X(Wsec-g.gp)},${Y(g.zled)} ${X(Wsec-g.gp)},${Y(g.eb)}"/>`;
+  if(g.tapaOn) el+=`<rect class="pz tapa" data-ctrl="grosor_tapa" x="${X(g.labio+g.hol)}" y="${Y(g.zled+g.gt)}" width="${(Wsec-2*g.labio-2*g.hol)*s}" height="${g.gt*s}"/>`;
+  el+=vdim(X(0)-9, Y(0), Y(g.prof), g.prof, "profundidad");
+  el+=vdim(X(0)-27, Y(0), Y(g.eb), g.eb, "grosor_trasera");
+  if(g.tope) el+=vdim(X(0)-27, Y(g.eb), Y(g.zled), g.hled, "hueco_led");
+  if(g.tapaOn) el+=vdim(X(Wsec)+11, Y(g.zled), Y(g.zled+g.gt), g.gt, "grosor_tapa");
+  el+=hdim(Y(0)+13, X(0), X(g.gp), g.gp, "grosor_pared");
+  el+=hdim(Y(g.prof)-7, X(0), X(g.labio), g.labio, "labio");
+  // ancho del hueco del LED (canal), acotado dentro de la cavidad
+  const zc=(g.eb+g.zled)/2;
+  el+=`<g data-ctrl="hueco_ancho"><line class="dl" x1="${X(g.gp)}" y1="${Y(zc)}" x2="${X(Wsec-g.gp)}" y2="${Y(zc)}"/>`+
+    `<line class="dl" x1="${X(g.gp)}" y1="${Y(zc)-3}" x2="${X(g.gp)}" y2="${Y(zc)+3}"/>`+
+    `<line class="dl" x1="${X(Wsec-g.gp)}" y1="${Y(zc)-3}" x2="${X(Wsec-g.gp)}" y2="${Y(zc)+3}"/>`+
+    `<text class="dt" x="${X(Wsec/2)}" y="${Y(zc)-3}">⟵ LED ${fmt(lastAncho)} ⟶</text></g>`;
+  return el; }
+function svgTapa(){ const g=geom(); const cav=20, Wsec=cav+2*g.labio+2*g.hol;
+  const s=Math.min(70/Math.max(g.gt,2), 150/Wsec), s2=Math.min(s,14), OX=80, OY=120, X=mm=>OX+mm*s2, Y=z=>OY-z*s2;
+  let el="";
+  // paredes del encastre (contexto) + holgura + tapa
+  el+=`<rect class="pz" x="${X(-g.labio-g.hol-2)}" y="${Y(g.gt+4)}" width="${(g.labio)*s2}" height="${(g.gt+6)*s2}"/>`;
+  el+=`<rect class="pz" x="${X(Wsec-g.labio)}" y="${Y(g.gt+4)}" width="${(g.labio)*s2}" height="${(g.gt+6)*s2}"/>`;
+  el+=`<rect class="pz tapa" data-ctrl="grosor_tapa" x="${X(0)}" y="${Y(g.gt)}" width="${(Wsec-2*g.labio)*s2>0?(Wsec-2*g.labio)*s2:40}" height="${g.gt*s2}"/>`;
+  el+=vdim(X(0)-8, Y(0), Y(g.gt), g.gt, "grosor_tapa");
+  el+=hdim(Y(0)+12, X(-g.hol), X(0), g.hol, "holgura");
+  el+=`<text class="dt" x="150" y="175">La tapa tiene la FORMA de la letra</text>`;
+  return el; }
+function drawPerfil(){ $("svgcaja").innerHTML = svgCaja(); $("svgtapa").innerHTML = svgTapa(); }
+
+// resaltar la cota al pasar por el campo del menú (en los dos perfiles a la vez)
+const HLC=["profundidad","grosor_pared","grosor_trasera","grosor_tapa","labio","holgura","hueco_led"];
+function setHL(id,on){ document.querySelectorAll(`#perfil [data-ctrl="${id}"]`).forEach(e=>e.classList.toggle("hl",on)); }
+HLC.forEach(id=>{ const el=$(id); if(!el) return; const row=el.closest(".row")||el;
+  row.addEventListener("mouseenter",()=>setHL(id,true)); row.addEventListener("mouseleave",()=>setHL(id,false));
+  el.addEventListener("focus",()=>setHL(id,true)); el.addEventListener("blur",()=>setHL(id,false)); });
+// la cota del hueco del LED se resalta con Grosor pared o Grosor letra (que lo cambian)
+["grosor_pared","grosor_letra"].forEach(id=>{ const el=$(id); if(!el) return; const row=el.closest(".row")||el;
+  const on=()=>setHL("hueco_ancho",true), of=()=>setHL("hueco_ancho",false);
+  row.addEventListener("mouseenter",on); row.addEventListener("mouseleave",of);
+  el.addEventListener("focus",on); el.addEventListener("blur",of); });
+
+const _prevOrig=preview;
+preview=async function(){ await _prevOrig(); drawPerfil(); };
+
+preview();
+</script>
+</body>
+</html>
