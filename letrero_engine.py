@@ -20,8 +20,9 @@ Salidas:
 """
 import numpy as np
 import trimesh
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, LineString
 from shapely.affinity import translate
+from shapely.ops import nearest_points
 
 import placa_engine as pe
 
@@ -64,6 +65,56 @@ def _ext(poly, h, z0=0.0):
         if z0:
             m.apply_translation([0, 0, z0])
         out.append(m)
+    return out
+
+
+def _mst_edges(polys):
+    """Arbol de recubrimiento minimo (Prim) sobre las letras, usando la distancia
+    real entre sus contornos. Devuelve las aristas (i, j) que conectan TODAS las
+    letras con la menor longitud total de puentes posible (cable continuo)."""
+    n = len(polys)
+    if n < 2:
+        return []
+    INF = float("inf")
+    dist = [[0.0] * n for _ in range(n)]
+    for i in range(n):
+        for j in range(i + 1, n):
+            d = polys[i].distance(polys[j])
+            dist[i][j] = dist[j][i] = d
+    intree = [False] * n
+    intree[0] = True
+    best = [(dist[0][j], 0) for j in range(n)]
+    edges = []
+    for _ in range(n - 1):
+        u, bd = -1, INF
+        for j in range(n):
+            if not intree[j] and best[j][0] < bd:
+                bd, u = best[j][0], j
+        if u < 0:
+            break
+        intree[u] = True
+        edges.append((best[u][1], u))
+        for j in range(n):
+            if not intree[j] and dist[u][j] < best[j][0]:
+                best[j] = (dist[u][j], u)
+    return edges
+
+
+def _bridge_polys(comps, w):
+    """Rectangulos (en 2D) que unen los grupos sueltos de letras por sus puntos
+    mas cercanos siguiendo el arbol minimo. Al fundirlos con el contorno y luego
+    construir la caja, el puente queda HUECO y con TAPA igual que las letras, y su
+    cavidad enlaza con la de las letras -> por ahi pasa el cable/tira LED."""
+    edges = _mst_edges(comps)
+    out = []
+    for a, b in edges:
+        pa, pb = nearest_points(comps[a], comps[b])
+        p1 = np.array([pa.x, pa.y]); p2 = np.array([pb.x, pb.y])
+        d = p2 - p1; L = float(np.hypot(*d))
+        u = d / L if L > 1e-6 else np.array([1.0, 0.0])
+        q1 = p1 - u * 1.5; q2 = p2 + u * 1.5          # mete el puente en cada forma
+        seg = LineString([tuple(q1), tuple(q2)])
+        out.append(seg.buffer(w / 2.0, cap_style=2, join_style=1))
     return out
 
 
@@ -146,10 +197,24 @@ def _build_parts(p):
     allx = np.hstack([np.array(q.exterior.coords)[:, 0] for q in polys]) + cx
     ally = np.hstack([np.array(q.exterior.coords)[:, 1] for q in polys]) + cy
 
-    ancho_hueco = _ancho_hueco(polys, gp)   # ancho del canal del LED (mm)
+    # UNIR LETRAS: las letras que se tocan (fuente ancha) se funden solas; los
+    # grupos que quedan sueltos (palabras separadas / lineas) se enlazan con
+    # PUENTES-CANAL. Todo se construye sobre el contorno ya unido -> el puente
+    # sale hueco y con tapa igual que las letras y el cable pasa por dentro.
+    comps = polys
+    if p.get("unir_letras", True) and len(polys) > 1:
+        from shapely.ops import unary_union
+        canal = float(p.get("canal_cable", 4) or 4)
+        canal = max(1.0, min(canal, prof - e_back - 0.4))
+        wbr = max(canal + 2.0 * gp + 1.0, 8.0)         # ancho -> puente hueco
+        groups = pe._to_polys(unary_union(polys))
+        bridges = _bridge_polys(groups, wbr)
+        comps = pe._to_polys(unary_union(list(groups) + bridges)) if bridges else groups
+
+    ancho_hueco = _ancho_hueco(comps, gp)   # ancho del canal del LED (mm)
 
     cajas, tapas = [], []
-    for poly in polys:
+    for poly in comps:
         hueco = poly.buffer(-gp)         # hueco principal (vacío en trazos finos)
         boca = poly.buffer(-labio)       # boca del encastre (más ancha que el hueco)
 
